@@ -1,17 +1,26 @@
-import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ShoppingBag, Menu, X, User, LogOut } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 const Navbar = () => {
   const { totalItems } = useCart();
+  const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const links = [
     { to: '/', label: 'Início' },
     { to: '/produtos', label: 'Produtos' },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b">
@@ -36,6 +45,29 @@ const Navbar = () => {
         </nav>
 
         <div className="flex items-center gap-3">
+          {user ? (
+            <div className="hidden md:flex items-center gap-2">
+              <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+                {user.email}
+              </span>
+              <button
+                onClick={handleSignOut}
+                className="p-2 rounded-full hover:bg-secondary transition-colors"
+                title="Sair"
+              >
+                <LogOut className="w-4 h-4 text-foreground" />
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="hidden md:flex p-2 rounded-full hover:bg-secondary transition-colors"
+              title="Entrar"
+            >
+              <User className="w-5 h-5 text-foreground" />
+            </Link>
+          )}
+
           <Link to="/carrinho" className="relative p-2 rounded-full hover:bg-secondary transition-colors">
             <ShoppingBag className="w-5 h-5 text-foreground" />
             {totalItems > 0 && (
@@ -70,6 +102,22 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
+            {user ? (
+              <button
+                onClick={() => { handleSignOut(); setMenuOpen(false); }}
+                className="text-sm font-semibold py-2 text-left text-foreground hover:text-primary transition-colors"
+              >
+                Sair ({user.email})
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="text-sm font-semibold py-2 text-foreground hover:text-primary transition-colors"
+              >
+                Entrar
+              </Link>
+            )}
           </nav>
         </div>
       )}
