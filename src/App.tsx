@@ -11,6 +11,11 @@ import Products from "./pages/Products";
 import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "@/components/AdminLayout";
+import Dashboard from "@/pages/admin/Dashboard";
+import AdminProducts from "@/pages/admin/AdminProducts";
+import AdminOrders from "@/pages/admin/AdminOrders";
+import AdminUsers from "@/pages/admin/AdminUsers";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +33,10 @@ const App = () => (
                 <Route path="/produtos" element={<Products />} />
                 <Route path="/carrinho" element={<Cart />} />
                 <Route path="/login" element={<Auth />} />
+                <Route path="/admin" element={<AdminLayout><Dashboard /></AdminLayout>} />
+                <Route path="/admin/produtos" element={<AdminLayout><AdminProducts /></AdminLayout>} />
+                <Route path="/admin/pedidos" element={<AdminLayout><AdminOrders /></AdminLayout>} />
+                <Route path="/admin/usuarios" element={<AdminLayout><AdminUsers /></AdminLayout>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>

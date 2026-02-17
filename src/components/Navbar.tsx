@@ -1,13 +1,15 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User, LogOut } from 'lucide-react';
+import { ShoppingBag, Menu, X, User, LogOut, Shield } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 const Navbar = () => {
   const { totalItems } = useCart();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -47,6 +49,11 @@ const Navbar = () => {
         <div className="flex items-center gap-3">
           {user ? (
             <div className="hidden md:flex items-center gap-2">
+              {isAdmin && (
+                <Link to="/admin" className="p-2 rounded-full hover:bg-secondary transition-colors" title="Painel Admin">
+                  <Shield className="w-4 h-4 text-primary" />
+                </Link>
+              )}
               <span className="text-xs text-muted-foreground truncate max-w-[120px]">
                 {user.email}
               </span>
