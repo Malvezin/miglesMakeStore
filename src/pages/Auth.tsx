@@ -10,6 +10,7 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const Auth = () => {
 
     const { error } = isLogin
       ? await signIn(email, password)
-      : await signUp(email, password);
+      : await signUp(email, password, fullName);
 
     setLoading(false);
 
@@ -55,6 +56,19 @@ const Auth = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!isLogin && (
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Nome completo</Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="Seu nome"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required={!isLogin}
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

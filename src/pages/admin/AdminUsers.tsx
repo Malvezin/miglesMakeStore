@@ -8,22 +8,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-interface AdminRole {
+interface AdminWithProfile {
   id: string;
   user_id: string;
   role: string;
+  full_name: string;
 }
 
 const AdminUsers = () => {
-  const [admins, setAdmins] = useState<AdminRole[]>([]);
+  const [admins, setAdmins] = useState<AdminWithProfile[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [userId, setUserId] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const fetchAdmins = async () => {
-    const { data } = await supabase.from('user_roles').select('*').eq('role', 'admin');
-    if (data) setAdmins(data);
+    const { data: roles } = await supabase.from('user_roles').select('*').eq('role', 'admin');
+    if (!roles) return;
+
+    const userIds = roles.map(r => r.user_id);
+    const { data: profiles } = await supabase.from('profiles').select('id, full_name').in('id', userIds);
+
+    const profileMap = new Map((profiles || []).map(p => [p.id, p.full_name]));
+    setAdmins(roles.map(r => ({
+      ...r,
+      full_name: profileMap.get(r.user_id) || 'Sem nome',
+    })));
   };
 
   useEffect(() => { fetchAdmins(); }, []);
@@ -76,7 +86,7 @@ const AdminUsers = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User ID</TableHead>
+              <TableHead>Nome</TableHead>
               <TableHead>Role</TableHead>
               <TableHead className="w-[80px]">Ações</TableHead>
             </TableRow>
@@ -86,7 +96,7 @@ const AdminUsers = () => {
               <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">Nenhum admin cadastrado.</TableCell></TableRow>
             ) : admins.map(a => (
               <TableRow key={a.id}>
-                <TableCell className="font-mono text-xs">{a.user_id}</TableCell>
+                <TableCell className="font-medium">{a.full_name}</TableCell>
                 <TableCell>{a.role}</TableCell>
                 <TableCell>
                   <Button variant="ghost" size="icon" onClick={() => removeAdmin(a.id)}>
