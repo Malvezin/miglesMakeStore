@@ -40,8 +40,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
       options: { emailRedirectTo: window.location.origin },
     });
-    if (!error && data.user && fullName) {
-      await supabase.from('profiles').insert({ id: data.user.id, full_name: fullName });
+    if (!error && data.user) {
+      await supabase.from('profiles').insert({ id: data.user.id, full_name: fullName || '', email });
     }
     return { error: error as Error | null };
   };
