@@ -3,16 +3,25 @@ import { ShoppingBag, Menu, X, User, LogOut, Shield } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 const Navbar = () => {
   const { totalItems } = useCart();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) { setDisplayName(null); return; }
+    supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle()
+      .then(({ data }) => {
+        setDisplayName(data?.full_name || user.email?.split('@')[0] || null);
+      });
+  }, [user]);
 
   const links = [
     { to: '/', label: 'Início' },
@@ -55,7 +64,7 @@ const Navbar = () => {
                 </Link>
               )}
               <span className="text-xs text-muted-foreground truncate max-w-[120px]">
-                {user.email}
+                {displayName}
               </span>
               <button
                 onClick={handleSignOut}
@@ -109,12 +118,22 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
+            {user && isAdmin && (
+              <Link
+                to="/admin"
+                onClick={() => setMenuOpen(false)}
+                className="text-sm font-semibold py-2 text-primary hover:text-primary/80 transition-colors flex items-center gap-2"
+              >
+                <Shield className="w-4 h-4" />
+                Painel Admin
+              </Link>
+            )}
             {user ? (
               <button
                 onClick={() => { handleSignOut(); setMenuOpen(false); }}
                 className="text-sm font-semibold py-2 text-left text-foreground hover:text-primary transition-colors"
               >
-                Sair ({user.email})
+                Sair ({displayName})
               </button>
             ) : (
               <Link
