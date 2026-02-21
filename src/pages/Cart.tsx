@@ -1,9 +1,30 @@
 import { useCart } from '@/contexts/CartContext';
-import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Trash2, Plus, Minus, ShoppingBag, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, totalItems, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  const handleCheckout = () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Você precisa estar logado para finalizar a compra.",
+        variant: "destructive"
+      });
+      navigate('/login');
+      return;
+    }
+    navigate('/checkout');
+  };
 
   if (items.length === 0) {
     return (
@@ -73,8 +94,13 @@ const Cart = () => {
           </span>
         </div>
 
-        <button className="w-full brand-gradient text-primary-foreground font-bold rounded-full py-3 text-lg hover:shadow-brand hover:scale-[1.02] transition-all">
-          Finalizar Compra
+        <button
+          onClick={handleCheckout}
+          disabled={isCheckingOut}
+          className="w-full brand-gradient text-primary-foreground font-bold rounded-full py-3 text-lg hover:shadow-brand hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isCheckingOut && <Loader2 className="w-5 h-5 animate-spin" />}
+          {isCheckingOut ? 'Processando...' : 'Finalizar Compra'}
         </button>
 
         <button

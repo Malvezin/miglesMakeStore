@@ -26,6 +26,7 @@ const Navbar = () => {
   const links = [
     { to: '/', label: 'Início' },
     { to: '/produtos', label: 'Produtos' },
+    ...(user ? [{ to: '/meus-pedidos', label: 'Meus Pedidos' }] : []),
   ];
 
   const handleSignOut = async () => {
@@ -46,9 +47,8 @@ const Navbar = () => {
             <Link
               key={link.to}
               to={link.to}
-              className={`text-sm font-semibold transition-colors hover:text-primary ${
-                location.pathname === link.to ? 'text-primary' : 'text-foreground'
-              }`}
+              className={`text-sm font-semibold transition-colors hover:text-primary ${location.pathname === link.to ? 'text-primary' : 'text-foreground'
+                }`}
             >
               {link.label}
             </Link>
@@ -111,9 +111,8 @@ const Navbar = () => {
                 key={link.to}
                 to={link.to}
                 onClick={() => setMenuOpen(false)}
-                className={`text-sm font-semibold py-2 transition-colors hover:text-primary ${
-                  location.pathname === link.to ? 'text-primary' : 'text-foreground'
-                }`}
+                className={`text-sm font-semibold py-2 transition-colors hover:text-primary ${location.pathname === link.to ? 'text-primary' : 'text-foreground'
+                  }`}
               >
                 {link.label}
               </Link>

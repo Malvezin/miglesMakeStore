@@ -5,22 +5,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
-interface Order {
+interface OrderDetail {
   id: string;
-  user_id: string;
+  created_at: string;
   status: string;
   total: number;
-  created_at: string;
+  customer_name: string;
+  customer_email: string;
+  items: {
+    product: {
+      name: string;
+    };
+    quantity: number;
+  }[];
+  archived: boolean;
 }
 
-const statuses = ['pendente', 'confirmado', 'enviado', 'entregue', 'cancelado'];
+type Order = OrderDetail;
+
+const statuses = ['pago_simulado', 'preparando', 'enviado', 'finalizado'];
 
 const statusColor: Record<string, string> = {
-  pendente: 'bg-yellow-100 text-yellow-800',
-  confirmado: 'bg-blue-100 text-blue-800',
+  pago_simulado: 'bg-green-100 text-green-800',
+  preparando: 'bg-blue-100 text-blue-800',
   enviado: 'bg-purple-100 text-purple-800',
-  entregue: 'bg-green-100 text-green-800',
-  cancelado: 'bg-red-100 text-red-800',
+  finalizado: 'bg-slate-100 text-slate-800',
 };
 
 const AdminOrders = () => {
@@ -28,7 +37,11 @@ const AdminOrders = () => {
   const { toast } = useToast();
 
   const fetchOrders = async () => {
-    const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('archived', false)
+      .order('created_at', { ascending: false });
     if (data) setOrders(data);
   };
 
@@ -40,6 +53,12 @@ const AdminOrders = () => {
     else { toast({ title: 'Status atualizado!' }); fetchOrders(); }
   };
 
+  const archiveOrder = async (id: string) => {
+    const { error } = await supabase.from('orders').update({ archived: true }).eq('id', id);
+    if (error) toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    else { toast({ title: 'Pedido encerrado!' }); fetchOrders(); }
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Pedidos</h1>
@@ -47,11 +66,12 @@ const AdminOrders = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Data</TableHead>
+              <TableHead>Pedido</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Itens</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Alterar Status</TableHead>
+              <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -59,19 +79,49 @@ const AdminOrders = () => {
               <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhum pedido encontrado.</TableCell></TableRow>
             ) : orders.map(o => (
               <TableRow key={o.id}>
-                <TableCell className="font-mono text-xs">{o.id.slice(0, 8)}...</TableCell>
-                <TableCell>{new Date(o.created_at).toLocaleDateString('pt-BR')}</TableCell>
-                <TableCell>R$ {o.total.toFixed(2)}</TableCell>
                 <TableCell>
-                  <Badge className={statusColor[o.status] || ''}>{o.status}</Badge>
+                  <div className="flex flex-col">
+                    <span className="font-mono text-[10px] text-muted-foreground">#{o.id.slice(0, 8)}</span>
+                    <span className="text-xs">{new Date(o.created_at).toLocaleDateString('pt-BR')}</span>
+                  </div>
                 </TableCell>
                 <TableCell>
-                  <Select value={o.status} onValueChange={v => updateStatus(o.id, v)}>
-                    <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {statuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm">{o.customer_name || 'N/A'}</span>
+                    <span className="text-[10px] text-muted-foreground">{o.customer_email || 'N/A'}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="max-w-[200px] flex flex-wrap gap-1">
+                    {(o.items || []).map((item, idx) => (
+                      <span key={idx} className="text-[10px] bg-secondary px-1.5 py-0.5 rounded">
+                        {item.quantity}x {item.product.name}
+                      </span>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell className="font-bold">R$ {o.total.toFixed(2)}</TableCell>
+                <TableCell>
+                  <Badge className={`${statusColor[o.status] || ''} border-none`}>{o.status}</Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-2">
+                    <Select value={o.status} onValueChange={v => updateStatus(o.id, v)}>
+                      <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {statuses.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+
+                    {o.status === 'finalizado' && (
+                      <button
+                        onClick={() => archiveOrder(o.id)}
+                        className="w-[130px] h-8 text-[10px] font-bold bg-secondary hover:bg-destructive hover:text-destructive-foreground transition-colors rounded-md border"
+                      >
+                        Encerrar Pedido
+                      </button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
