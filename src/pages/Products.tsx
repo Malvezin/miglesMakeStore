@@ -11,13 +11,18 @@ const Products = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data } = await supabase
-        .from('products')
-        .select('id, name, image_url, category')
-        .eq('active', true)
-        .order('name');
+      const { data, error } = await supabase.from('products').select('*');
+      if (error) {
+        console.error('Error fetching products:', error);
+        return;
+      }
       if (data) {
-        setProducts(data.map(p => ({ id: p.id, name: p.name, image: p.image_url, category: p.category })));
+        setProducts(data.map(p => ({
+          id: p.id,
+          name: p.name,
+          image: p.image_url || p.image,
+          category: p.category
+        })));
       }
       setLoading(false);
     };
@@ -40,11 +45,10 @@ const Products = () => {
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all ${
-              activeCategory === cat
-                ? 'brand-gradient text-primary-foreground shadow-brand'
-                : 'bg-secondary text-secondary-foreground hover:bg-primary/10'
-            }`}
+            className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all ${activeCategory === cat
+              ? 'brand-gradient text-primary-foreground shadow-brand'
+              : 'bg-secondary text-secondary-foreground hover:bg-primary/10'
+              }`}
           >
             {cat}
           </button>

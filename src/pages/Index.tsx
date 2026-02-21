@@ -1,9 +1,41 @@
 import Hero from '@/components/Hero';
 import ProductCard from '@/components/ProductCard';
-import { products } from '@/data/products';
+import { supabase } from '@/lib/supabase';
+import { Product } from '@/contexts/CartContext';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+interface DBProduct {
+  id: string;
+  name: string;
+  category: string;
+  image_url: string | null;
+  image: string | null;
+}
+
 const Index = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase.from('products').select('*');
+      if (error) {
+        console.error('Error fetching products:', error);
+        return;
+      }
+      if (data) {
+        setProducts(data.map((p: DBProduct) => ({
+          id: p.id,
+          name: p.name,
+          category: p.category,
+          image: p.image_url || p.image || ''
+        })) || []);
+      };
+    };
+
+    fetchProducts();
+  }, []);
+
   const featured = products.slice(0, 8);
 
   return (
