@@ -29,7 +29,7 @@ const Dashboard = () => {
   const cards = [
     { title: 'Produtos', value: stats.products, icon: Package, color: 'text-primary' },
     { title: 'Pedidos', value: stats.orders, icon: ShoppingCart, color: 'text-accent' },
-    { title: 'Admins', value: stats.admins, icon: Users, color: 'text-secondary-foreground' },
+    { title: 'Usuários', value: stats.admins, icon: Users, color: 'text-secondary-foreground' },
     { title: 'Receita', value: `R$ ${stats.revenue.toFixed(2)}`, icon: DollarSign, color: 'text-primary' },
   ];
 

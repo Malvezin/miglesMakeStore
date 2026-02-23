@@ -89,8 +89,12 @@ const AdminUsers = () => {
       toast({ title: 'Role atualizada com sucesso!' });
       setConfigUser(null);
       fetchUsers();
-    } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      toast({
+        title: 'Erro',
+        description: err instanceof Error ? err.message : 'Ocorreu um erro inesperado',
+        variant: 'destructive'
+      });
     }
 
     setSaving(false);
@@ -144,11 +148,10 @@ const AdminUsers = () => {
                 </TableCell>
                 <TableCell className="hidden sm:table-cell text-muted-foreground">{u.email || '—'}</TableCell>
                 <TableCell>
-                  <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
-                    u.role === 'admin'
+                  <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${u.role === 'admin'
                       ? 'bg-primary/10 text-primary'
                       : 'bg-muted text-muted-foreground'
-                  }`}>
+                    }`}>
                     {u.role === 'admin' ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3" />}
                     {u.role === 'admin' ? 'Admin' : 'Usuário'}
                   </span>

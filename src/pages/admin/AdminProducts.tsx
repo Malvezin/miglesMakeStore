@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Image as ImageIcon, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface DBProduct {
@@ -32,6 +32,8 @@ const AdminProducts = () => {
   const [editing, setEditing] = useState<DBProduct | null>(null);
   const [form, setForm] = useState(emptyProduct);
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchProducts = async () => {
@@ -41,26 +43,80 @@ const AdminProducts = () => {
 
   useEffect(() => { fetchProducts(); }, []);
 
-  const openCreate = () => { setEditing(null); setForm(emptyProduct); setDialogOpen(true); };
+  const openCreate = () => {
+    setEditing(null);
+    setForm(emptyProduct);
+    setImageFile(null);
+    setImagePreview(null);
+    setDialogOpen(true);
+  };
   const openEdit = (p: DBProduct) => {
     setEditing(p);
     setForm({ name: p.name, price: p.price, image_url: p.image_url, category: p.category, stock: p.stock, active: p.active });
+    setImageFile(null);
+    setImagePreview(p.image_url);
     setDialogOpen(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSave = async () => {
     setLoading(true);
+    let currentImageUrl = form.image_url;
+
+    if (imageFile) {
+      try {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('products')
+          .getPublicUrl(filePath);
+
+        currentImageUrl = publicUrl;
+      } catch (error: unknown) {
+        toast({
+          title: 'Erro no upload',
+          description: error instanceof Error ? error.message : 'Ocorreu um erro inesperado',
+          variant: 'destructive'
+        });
+        setLoading(false);
+        return;
+      }
+    }
+
+    const finalForm = { ...form, image_url: currentImageUrl };
+
     if (editing) {
-      const { error } = await supabase.from('products').update(form).eq('id', editing.id);
+      const { error } = await supabase.from('products').update(finalForm).eq('id', editing.id);
       if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); }
       else toast({ title: 'Produto atualizado!' });
     } else {
-      const { error } = await supabase.from('products').insert(form);
+      const { error } = await supabase.from('products').insert(finalForm);
       if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); }
       else toast({ title: 'Produto criado!' });
     }
     setLoading(false);
     setDialogOpen(false);
+    setImageFile(null);
+    setImagePreview(null);
     fetchProducts();
   };
 
@@ -108,8 +164,53 @@ const AdminProducts = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>URL da Imagem</Label>
-                <Input value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })} />
+                <Label>Imagem do Produto</Label>
+                <div className="flex flex-col gap-4">
+                  {imagePreview ? (
+                    <div className="relative aspect-square w-32 overflow-hidden rounded-lg border bg-muted">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="h-full w-full object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon"
+                        className="absolute bottom-1 right-1 h-6 w-6"
+                        onClick={() => document.getElementById('image-upload')?.click()}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex aspect-square w-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-muted hover:bg-muted/80"
+                      onClick={() => document.getElementById('image-upload')?.click()}
+                    >
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold text-center px-1">Upload</span>
+                    </div>
+                  )}
+                  <Input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <div className="grid gap-1">
+                    <Label className="text-xs text-muted-foreground uppercase font-bold tracking-tight">Ou URL manual</Label>
+                    <Input
+                      placeholder="https://..."
+                      value={form.image_url}
+                      onChange={e => {
+                        setForm({ ...form, image_url: e.target.value });
+                        if (!imageFile) setImagePreview(e.target.value);
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={form.active} onCheckedChange={v => setForm({ ...form, active: v })} />
