@@ -92,9 +92,15 @@ const AdminProducts = () => {
 
         currentImageUrl = publicUrl;
       } catch (error: unknown) {
+        let message = error instanceof Error ? error.message : 'Ocorreu um erro inesperado';
+
+        if (message.includes('bucket_not_found') || message.includes('Bucket not found')) {
+          message = 'Erro: O bucket "products" não foi criado no Supabase Storage. Crie o bucket com o nome "products" e marque-o como Público.';
+        }
+
         toast({
           title: 'Erro no upload',
-          description: error instanceof Error ? error.message : 'Ocorreu um erro inesperado',
+          description: message,
           variant: 'destructive'
         });
         setLoading(false);
@@ -228,6 +234,7 @@ const AdminProducts = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[80px]">Imagem</TableHead>
               <TableHead>Nome</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Preço</TableHead>
@@ -241,6 +248,17 @@ const AdminProducts = () => {
               <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum produto cadastrado.</TableCell></TableRow>
             ) : products.map(p => (
               <TableRow key={p.id}>
+                <TableCell>
+                  <div className="w-12 h-12 rounded-lg overflow-hidden border bg-muted">
+                    {p.image_url ? (
+                      <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="font-medium">{p.name}</TableCell>
                 <TableCell>{p.category}</TableCell>
                 <TableCell>R$ {p.price.toFixed(2)}</TableCell>

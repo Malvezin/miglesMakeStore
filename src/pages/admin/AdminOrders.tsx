@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Loader2, Search, Minus, Trash2, ShoppingCart } from 'lucide-react';
+import { Plus, Loader2, Search, Minus, Trash2, ShoppingCart, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -37,6 +37,7 @@ interface OrderDetail {
   items: {
     product: {
       name: string;
+      image?: string;
     };
     quantity: number;
   }[];
@@ -419,11 +420,22 @@ const AdminOrders = () => {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="max-w-[200px] flex flex-wrap gap-1">
+                  <div className="max-w-[250px] flex flex-wrap gap-2">
                     {(o.items || []).map((item, idx) => (
-                      <span key={idx} className="text-[10px] bg-secondary px-1.5 py-0.5 rounded">
-                        {item.quantity}x {item.product.name}
-                      </span>
+                      <div key={idx} className="flex items-center gap-1.5 bg-secondary/50 pr-2 rounded-lg overflow-hidden border border-transparent hover:border-border transition-colors">
+                        <div className="w-8 h-8 flex-shrink-0 bg-muted">
+                          {item.product.image ? (
+                            <img src={item.product.image} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon className="w-3 h-3 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[10px] font-bold">
+                          {item.quantity}x {item.product.name}
+                        </span>
+                      </div>
                     ))}
                   </div>
                 </TableCell>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, Clock, Package, Truck, CheckCircle, AlertCircle, LucideIcon } from 'lucide-react';
+import { ShoppingBag, Clock, Package, Truck, CheckCircle, AlertCircle, LucideIcon, Image as ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface OrderItem {
@@ -116,11 +116,22 @@ const MyOrders = () => {
 
                             <div className="border-t pt-4">
                                 <p className="text-sm font-bold mb-3">Itens:</p>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-3">
                                     {order.items?.map((item, idx) => (
-                                        <span key={idx} className="inline-flex items-center bg-secondary/50 rounded-lg px-3 py-1.5 text-xs font-medium">
-                                            {item.quantity}x {item.product.name}
-                                        </span>
+                                        <div key={idx} className="flex items-center gap-2 bg-secondary/30 pr-3 rounded-lg overflow-hidden border border-transparent hover:border-border transition-all">
+                                            <div className="w-10 h-10 flex-shrink-0 bg-muted">
+                                                {item.product.image ? (
+                                                    <img src={item.product.image} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <span className="text-xs font-bold">
+                                                {item.quantity}x {item.product.name}
+                                            </span>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
