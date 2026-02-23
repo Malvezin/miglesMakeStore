@@ -55,10 +55,11 @@ const Checkout = () => {
                 description: "Seu pagamento simulado foi processado com sucesso.",
             });
             navigate('/confirmacao');
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro inesperado";
             toast({
                 title: "Erro ao processar pedido",
-                description: error.message,
+                description: errorMessage,
                 variant: "destructive"
             });
         } finally {
